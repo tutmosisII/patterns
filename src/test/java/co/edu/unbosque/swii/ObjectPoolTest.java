@@ -13,7 +13,7 @@ import java.sql.SQLException;
  */
 public class ObjectPoolTest {
 
-    @Test(threadPoolSize = 1, invocationCount = 1)
+    @Test(threadPoolSize = 3, invocationCount = 1)
     public void probandoLaCreacionDeVariasConexiones() throws Exception {
         System.out.println(Thread.currentThread().getId());
         FabricaConexiones f=new FabricaConexiones();
