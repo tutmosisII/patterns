@@ -5,12 +5,19 @@
  */
 package co.edu.unbosque.swii;
 
+import static co.edu.unbosque.swii.ObjectPoolTest.database;
+import static co.edu.unbosque.swii.ObjectPoolTest.host;
+import static co.edu.unbosque.swii.ObjectPoolTest.port;
+import static co.edu.unbosque.swii.ObjectPoolTest.pwd;
+import static co.edu.unbosque.swii.ObjectPoolTest.user;
 import java.sql.Connection;
+import java.util.NoSuchElementException;
 import org.apache.commons.pool2.BaseObjectPool;
 import org.apache.commons.pool2.KeyedObjectPool;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.testng.annotations.Test;
 
 /**
@@ -18,47 +25,70 @@ import org.testng.annotations.Test;
  * @author Alejandro
  */
 public class PoolTest {
-    
-        public static final String pwd="xxxxxxxx";
 
-    @Test(expectedExceptions =org.postgresql.util.PSQLException.class,
-            expectedExceptionsMessageRegExp = ".*too many connections.*"
-            )
-    public void soloDebeCrear5Conexiones() throws Exception{
-        FabricaConexiones fc=new FabricaConexiones("aretico.com",5432,"software_2","grupo8_5",pwd);
-        ObjectPool<Connection> pool=new GenericObjectPool<Connection>(fc);
+    public static final String pwd = "swii";
+    public static final String host = "localhost";
+    public static final int port = 5555;
+    public static final String user = "swii";
+    public static final String database = "swii";
+
+    @Test(expectedExceptions = org.postgresql.util.PSQLException.class)
+    public void soloDebeCrear5Conexiones() throws Exception {
+        FabricaConexiones fc = new FabricaConexiones(host, port, database, user, pwd);
+
+        ObjectPool<Connection> pool = new GenericObjectPool<Connection>(fc);
         for (int i = 0; i < 6; i++) {
-            pool.borrowObject();           
-        }                
+            System.out.println(i);
+            pool.borrowObject();
+        }
     }
     
-    @Test
-    public void aprendiendoAControlarLasConexiones() throws Exception{
-        FabricaConexiones fc=new FabricaConexiones("aretico.com",5432,"software_2","grupo8_5",pwd);
-        ObjectPool<Connection> pool=new GenericObjectPool<Connection>(fc);
+     @Test(timeOut = 3000,expectedExceptions = {NoSuchElementException.class})
+    public void probandoTiempoDeEsperaCuandoNoHayRecursos() throws Exception {
+        FabricaConexiones fc = new FabricaConexiones(host, port, database, user, pwd);
+         GenericObjectPoolConfig config=new GenericObjectPoolConfig();
+         config.setMaxTotal(4);
+         //config.setMaxIdle(4);
+      
+         config.setMaxWaitMillis(2500);
+         config.setBlockWhenExhausted(true);
+      
+        ObjectPool<Connection> pool = new GenericObjectPool<Connection>(fc,config);
         for (int i = 0; i < 6; i++) {
-            Connection c=pool.borrowObject();
+                        System.out.println(i);
+
+            pool.borrowObject();
+        }
+    }
+
+    @Test
+    public void aprendiendoAControlarLasConexiones() throws Exception {
+        FabricaConexiones fc = new FabricaConexiones(host, port, database, user, pwd);
+
+        ObjectPool<Connection> pool = new GenericObjectPool<Connection>(fc);
+        for (int i = 0; i < 6; i++) {
+            Connection c = pool.borrowObject();
             pool.returnObject(c);
-        }                
+        }
     }
-    
+
     @Test
-    public void quePasaCuandoSeCierraUnaConexionAntesDeRetornarla(){
-        
+    public void quePasaCuandoSeCierraUnaConexionAntesDeRetornarla() {
+
     }
-    
+
     @Test
-    public void quePasaCuandoSeRetornaUnaconexionContransaccionIniciada(){
-        
+    public void quePasaCuandoSeRetornaUnaconexionContransaccionIniciada() {
+
     }
-    
+
     @Test(threadPoolSize = 5, invocationCount = 5)
-    public void midaTiemposParaInsertar1000RegistrosConSingleton(){
-        
+    public void midaTiemposParaInsertar1000RegistrosConSingleton() {
+
     }
-    
+
     @Test(threadPoolSize = 5, invocationCount = 5)
-    public void midaTiemposParaInsertar1000RegistrosConObjectPool(){
-        
+    public void midaTiemposParaInsertar1000RegistrosConObjectPool() {
+
     }
 }
